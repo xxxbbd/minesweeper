@@ -39,7 +39,7 @@ void AppearanceWindow::render() {
     startWindow.setPosition({ 0.f, 0.f });
 
     // Текст на главном экране
-    Font font("/Users/a1/CLionProjects/minesweeper/src/Monaco.ttf");
+    Font font("assets/fonts/Monaco.ttf");
     Text startText(font);
     startText.setCharacterSize(32);
     startText.setFillColor(Color::Black);

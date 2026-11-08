@@ -84,7 +84,7 @@ void GameWindow::eventHandler() {
 }
 
 void GameWindow::drawField() const{
-    Texture cellTexture("/Users/a1/CLionProjects/minesweeper/src/Minesweeper.jpg");
+    Texture cellTexture("assets/textures/Minesweeper.jpg");
     cellTexture.setSmooth(true);
     Sprite cellSprite(cellTexture);
     for (int x { 0 }; x < field_.rows(); ++x) {
@@ -103,7 +103,7 @@ void GameWindow::drawField() const{
 }
 
 void GameWindow::drawTimer() {
-    Font font("/Users/a1/CLionProjects/minesweeper/src/Monaco.ttf");
+    Font font("assets/fonts/Monaco.ttf");
     Text timeText(font);
     timeText.setCharacterSize(CELL_SIZE);       // Размер текста в пикселях
     timeText.setFillColor(Color::Black);        // Цвет текста

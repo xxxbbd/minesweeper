@@ -1,7 +1,5 @@
 #include <array>
-
 #include "AppearanceWindow.h"
-#include "GameWindow.h"
 
 int main() {
 
