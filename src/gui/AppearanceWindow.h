@@ -7,6 +7,7 @@ class AppearanceWindow {
 public:
     AppearanceWindow();
     void run();
+
 private:
     void eventHandler();
     void render();

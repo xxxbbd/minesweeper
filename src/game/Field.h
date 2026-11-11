@@ -23,6 +23,7 @@ public:
     int rows() const;
     int cols() const;
     const Cell& at(int row, int col) const;
+
 private:
     Cell& cell(int row, int col);
     void placeMines();
@@ -33,9 +34,9 @@ private:
     int rows_{ 0 };
     int cols_{ 0 };
     int mines_{ 0 };
-    int marked_{ 0 }; // ???
+    int marked_{ 0 }; // to do
     State state_{ playing };
-    // !!!
+
     friend class GameWindow;
 };
 

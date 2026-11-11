@@ -11,6 +11,7 @@ public:
     void setMine();
     void setOpen();
     void setFlagged(bool);
+
 private:
     void reset();
     bool isMine_{ false };

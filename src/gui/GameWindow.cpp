@@ -32,7 +32,7 @@ void GameWindow::run() {
 }
 
 void GameWindow::eventHandler() {
-    while (const std::optional event { window_->pollEvent() }) {
+    while (const std::optional event{ window_->pollEvent() }) {
         if (event->is<Event::Closed>()) { window_->close(); }
         if (event->is<Event::Resized>()) {
             // to do
@@ -44,43 +44,52 @@ void GameWindow::eventHandler() {
         int y = pos.y / CELL_SIZE - 1; // -1 так как y = 0 под таймер
 
         // Определяем, была ли нажата кнопка мыши (на клетку)?
-        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && y >= 0 && !resetWindowOpen_ && field_.state() != Field::State::lost) {
+        if (const auto* mouseButtonPressed{ event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed != nullptr) {
 
-            // Если была нажата левая кнопка мыши, то открываем клетку
-            if (mouseButtonPressed->button == Mouse::Button::Right) {
-                field_.open(x, y);
+            // реализовать кнопку сброса в виде класса и проверять тут границы
+            auto inResetButton = [](int x, int y) {
+                return 4 <= x && x <= 6 && y < 0;
+            };
+
+            // Перезапуск игры (про таймер не забыть)
+            if (resetWindowOpen_) {
+                if (mouseButtonPressed->button == Mouse::Button::Left) {
+                    if (rWindow_.inYesButton(pos.x, pos.y)) {
+                        resetWindowOpen_ = false;
+                        field_.restart();
+                    }
+                    if (rWindow_.inNoButton(pos.x, pos.y)) {
+                        resetWindowOpen_ = false;;
+                    }
+                }
+                return;
             }
-            // Если была нажата правая кнопка мыши, то отображаем флажок
-            else if (mouseButtonPressed->button == Mouse::Button::Left) {
-                if (!field_.at(x, y).open()) {
-                    field_.cell(x, y).setFlagged(!field_.at(x, y).flagged()); // подумать над способом получения доступа к клетке поля
+
+            // Перезапуск игры (про таймер не забыть)
+            if (field_.state() == Field::State::lost) {
+                if (mouseButtonPressed->button == Mouse::Button::Left && inResetButton(x, y)) {
+                    field_.restart();
+                }
+                return;
+            }
+
+            if (inResetButton(x, y)) {
+                if (mouseButtonPressed->button == Mouse::Button::Left) {
+                    resetWindowOpen_ = true;
                 }
             }
-        }
-        // реализовать кнопку сброса в виде класса и проверять тут границы
-        auto inResetButton = [](int x, int y) {
-            return 4 <= x && x <= 6 && y < 0;
-        };
-        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inResetButton(x, y) && !resetWindowOpen_ && field_.state() != Field::State::lost) {
-            if (mouseButtonPressed->button == Mouse::Button::Left) {
-                resetWindowOpen_ = true;
-            }
-        }
-        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && rWindow_.inNoButton(pos.x, pos.y) && resetWindowOpen_ && field_.state() != Field::State::lost) {
-            if (mouseButtonPressed->button == Mouse::Button::Left) {
-                resetWindowOpen_ = false;
-            }
-        }
-        // Перезапуск игры (про таймер не забыть)
-        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && rWindow_.inYesButton(pos.x, pos.y) && resetWindowOpen_ && field_.state() != Field::State::lost) {
-            if (mouseButtonPressed->button == Mouse::Button::Left) {
-                resetWindowOpen_ = false;
-                field_.restart();
-            }
-        }
-        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inResetButton(x, y) && field_.state() == Field::State::lost) {
-            if (mouseButtonPressed->button == Mouse::Button::Left) {
-                field_.restart();
+
+            if (y >= 0) {
+                // Если была нажата правая кнопка мыши, то открываем клетку
+                if (mouseButtonPressed->button == Mouse::Button::Right) {
+                    field_.open(x, y);
+                }
+                // Если была нажата левая кнопка мыши, то отображаем флажок
+                else if (mouseButtonPressed->button == Mouse::Button::Left) {
+                    if (!field_.at(x, y).open()) {
+                        field_.cell(x, y).setFlagged(!field_.at(x, y).flagged()); // подумать над способом получения доступа к клетке поля
+                    }
+                }
             }
         }
     }

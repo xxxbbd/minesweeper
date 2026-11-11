@@ -54,12 +54,13 @@ void AppearanceWindow::render() {
     startText.setPosition({ x, y });
 
     // Кнопка настройки
+    // to do
     CircleShape settingsButton(16.f);
     settingsButton.setFillColor(Color::Black);
     settingsButton.setPosition({ 10.f, 10.f });
 
     window_.draw(startWindow);
     window_.draw(startText);
-    window_.draw(settingsButton);
+    //window_.draw(settingsButton);
     window_.display();
 }
