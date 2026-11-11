@@ -14,10 +14,11 @@ FetchContent_Declare(SFML
 FetchContent_MakeAvailable(SFML)
 
 add_executable(main src/main.cpp
-        src/Cell.cpp
-        src/Field.cpp
-        src/GameWindow.cpp
-        src/AppearanceWindow.cpp)
+        src/game/Cell.cpp
+        src/game/Field.cpp
+        src/gui/GameWindow.cpp
+        src/gui/AppearanceWindow.cpp
+        src/gui/ResetWindow.cpp)
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)
 

@@ -10,7 +10,8 @@ public:
 private:
     void eventHandler();
     void render();
-    sf::RenderWindow window_;
+
+    sf::RenderWindow window_{};
     // bool gOpen { false }; to do
 };
 

@@ -11,7 +11,6 @@ void AppearanceWindow::run() {
     while (window_.isOpen()) {
         eventHandler();
         render();
-
     }
 }
 
@@ -44,8 +43,15 @@ void AppearanceWindow::render() {
     startText.setCharacterSize(32);
     startText.setFillColor(Color::Black);
     startText.setStyle(Text::Bold);
-    startText.setPosition({ 192.f, 208.f });
     startText.setString("GO?");
+
+    FloatRect textBounds{ startText.getLocalBounds() };
+    float textWidth { textBounds.size.x };
+    float textHeight { textBounds.size.y };
+    Vector2u windowSize { window_.getSize() };
+    float x{ static_cast<float>(windowSize.x) / 2 - textWidth / 2 };
+    float y{ static_cast<float>(windowSize.y) / 2 - textHeight / 2 };
+    startText.setPosition({ x, y });
 
     // Кнопка настройки
     CircleShape settingsButton(16.f);

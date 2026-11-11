@@ -2,7 +2,7 @@
 #define MINESWEEPER_FIELD_H
 
 #include <vector>
-#include "Cell.h" // почему без этого не работает
+#include "Cell.h"
 
 class Field {
 public:

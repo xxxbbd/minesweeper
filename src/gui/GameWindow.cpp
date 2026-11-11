@@ -1,17 +1,25 @@
 #include "GameWindow.h"
 #include <SFML/Graphics.hpp>
-#include "Cell.h"
+#include "ResetWindow.h"
 
 using namespace sf;
 
 static constexpr int CELL_SIZE{ 32 };
 
 GameWindow::GameWindow(RenderWindow* window)
-    : field_{ difficulty_.rows, difficulty_.cols, difficulty_.mines }, window_(window) {
+    : field_{ difficulty_.rows, difficulty_.cols, difficulty_.mines }, window_{ window }, rWindow_{ window } {
     // меняем размер окна при переключении с начального
     window_->setSize({static_cast<unsigned int>(field_.rows()) * CELL_SIZE, static_cast<unsigned int>(field_.cols()) * CELL_SIZE + CELL_SIZE});
     FloatRect visibleArea({0.f, 0.f}, {static_cast<float>(field_.rows() * CELL_SIZE), static_cast<float>(field_.cols() * CELL_SIZE + CELL_SIZE)});
     window_->setView(View(visibleArea));
+    if (!cellTexture_.loadFromFile("assets/textures/Minesweeper.jpg")) {
+        // to do
+    }
+    if (!resetTexture_.loadFromFile("assets/textures/Reset.png")) {
+        // to do
+    }
+    cellTexture_.setSmooth(true);
+    resetTexture_.setSmooth(true);
 }
 
 void GameWindow::run() {
@@ -36,7 +44,8 @@ void GameWindow::eventHandler() {
         int y = pos.y / CELL_SIZE - 1; // -1 так как y = 0 под таймер
 
         // Определяем, была ли нажата кнопка мыши (на клетку)?
-        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && y >= 0 && field_.state() != Field::State::lost) {
+        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && y >= 0 && !resetWindowOpen_ && field_.state() != Field::State::lost) {
+
             // Если была нажата левая кнопка мыши, то открываем клетку
             if (mouseButtonPressed->button == Mouse::Button::Right) {
                 field_.open(x, y);
@@ -48,45 +57,37 @@ void GameWindow::eventHandler() {
                 }
             }
         }
-        // ???
+        // реализовать кнопку сброса в виде класса и проверять тут границы
         auto inResetButton = [](int x, int y) {
-            return 5 <= x && x <= 6 && y < 0;
+            return 4 <= x && x <= 6 && y < 0;
         };
-        // if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inResetButton(x, y) && !isResetWindowOpen && !gameOver) {
-        //     if (mouseButtonPressed->button == Mouse::Button::Left) {
-        //         isResetWindowOpen = true; //
-        //     }
-        // }
-        // // ???
-        // auto inResetWindowCloseButton = [](int x, int y) {
-        //     return x == 0 && y == -1;
-        // };
-        // if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inResetWindowCloseButton(x, y) && isResetWindowOpen && !gameOver) {
-        //     if (mouseButtonPressed->button == Mouse::Button::Left) {
-        //         isResetWindowOpen = false;
-        //     }
-        // }
+        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inResetButton(x, y) && !resetWindowOpen_ && field_.state() != Field::State::lost) {
+            if (mouseButtonPressed->button == Mouse::Button::Left) {
+                resetWindowOpen_ = true;
+            }
+        }
+        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && rWindow_.inNoButton(pos.x, pos.y) && resetWindowOpen_ && field_.state() != Field::State::lost) {
+            if (mouseButtonPressed->button == Mouse::Button::Left) {
+                resetWindowOpen_ = false;
+            }
+        }
         // Перезапуск игры (про таймер не забыть)
-        // if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inResetButton(x, y) && field_.state() != Field::State::lost) {
-        //     if (mouseButtonPressed->button == Mouse::Button::Left) {
-        //         field_.restart();
-        //     }
-        // }
-        auto inSettingsButton = [](int x, int y) {
-            return true; //
-        };
-        // if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inSettingsButton(x, y)) {
-        //     if (mouseButtonPressed->button == Mouse::Button::Left) {
-        //         field_.restart();
-        //     }
-        // }
+        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && rWindow_.inYesButton(pos.x, pos.y) && resetWindowOpen_ && field_.state() != Field::State::lost) {
+            if (mouseButtonPressed->button == Mouse::Button::Left) {
+                resetWindowOpen_ = false;
+                field_.restart();
+            }
+        }
+        if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed && inResetButton(x, y) && field_.state() == Field::State::lost) {
+            if (mouseButtonPressed->button == Mouse::Button::Left) {
+                field_.restart();
+            }
+        }
     }
 }
 
-void GameWindow::drawField() const{
-    Texture cellTexture("assets/textures/Minesweeper.jpg");
-    cellTexture.setSmooth(true);
-    Sprite cellSprite(cellTexture);
+void GameWindow::drawField() {
+    Sprite cellSprite{ cellTexture_ };
     for (int x { 0 }; x < field_.rows(); ++x) {
         for (int y { 0 }; y < field_.cols(); ++y) {
             int cellId { 10 };
@@ -129,9 +130,22 @@ void GameWindow::drawTimer() {
     window_->draw(timeText);
 }
 
+void GameWindow::drawResetButton() {
+    CircleShape circle(16.f);
+    circle.setTexture(&resetTexture_);
+    float x{ static_cast<float>(window_->getSize().x) / 2 - circle.getLocalBounds().size.x / 2};
+    float y{ 0.f };
+    circle.setPosition({ x, y });
+    window_->draw(circle);
+}
+
 void GameWindow::render() {
     window_->clear(Color::White);
     drawField();
     drawTimer();
+    drawResetButton();
+    if (resetWindowOpen_) {
+        rWindow_.draw();
+    }
     window_->display();
 }
