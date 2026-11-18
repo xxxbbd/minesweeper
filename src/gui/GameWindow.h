@@ -31,6 +31,7 @@ private:
     sf::Texture resetTexture_{};
     int seconds_{ 0 };
     bool resetWindowOpen_{ false };
+    bool active_{ false };
 };
 
 #endif //MINESWEEPER_GAMEWINDOW_H

@@ -1,8 +1,26 @@
 #include "AppearanceWindow.h"
 #include <SFML/Graphics.hpp>
 #include "GameWindow.h"
+#include "SettingsWindow.h"
 
 using namespace sf;
+
+bool SettingsButton::inSettingsButton(int x, int y) {
+    return x_ <= x && x <= x_ + width_
+            && y_ <= y && y <= y_ + height_;
+}
+
+void SettingsButton::setPosition(Vector2f pos) {
+    x_ = pos.x;
+    y_ = pos.y;
+}
+
+void SettingsButton::draw(RenderWindow* window) {
+    CircleShape shape(20.f);
+    shape.setFillColor(Color::Black);
+    shape.setPosition({ x_, y_ });
+    window->draw(shape);
+}
 
 AppearanceWindow::AppearanceWindow()
     : window_{VideoMode({384, 384}), "Minesweeper"} {}
@@ -18,14 +36,17 @@ void AppearanceWindow::eventHandler() {
     while (const std::optional event { window_.pollEvent() }) {
         if (event->is<Event::Closed>()) { window_.close(); }
 
-        // Получаем координаты курсора мышки относительно окна нашего приложения
         Vector2i pos = Mouse::getPosition(window_);
-        int x = pos.x / 32;
-        int y = pos.y / 32;
-
         if (const auto* mouseButtonPressed { event->getIf<Event::MouseButtonPressed>() }; mouseButtonPressed) {
-            GameWindow w(&window_);
-            w.run();
+
+            if (mouseButtonPressed->button == Mouse::Button::Left && sButton_.inSettingsButton(pos.x, pos.y)) {
+                SettingsWindow sWindow(&window_);
+                sWindow.run();
+            }
+            else {
+                GameWindow w(&window_);
+                w.run();
+            }
         }
     }
 }
@@ -54,13 +75,10 @@ void AppearanceWindow::render() {
     startText.setPosition({ x, y });
 
     // Кнопка настройки
-    // to do
-    CircleShape settingsButton(16.f);
-    settingsButton.setFillColor(Color::Black);
-    settingsButton.setPosition({ 10.f, 10.f });
+    sButton_.setPosition({ 10.f, 10.f });
 
     window_.draw(startWindow);
     window_.draw(startText);
-    //window_.draw(settingsButton);
+    sButton_.draw(&window_);
     window_.display();
 }

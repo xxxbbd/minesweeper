@@ -7,7 +7,7 @@ using namespace sf;
 static constexpr int CELL_SIZE{ 32 };
 
 GameWindow::GameWindow(RenderWindow* window)
-    : field_{ difficulty_.rows, difficulty_.cols, difficulty_.mines }, window_{ window }, rWindow_{ window } {
+    : field_{ difficulty_.rows, difficulty_.cols, difficulty_.mines }, window_{ window }, rWindow_{ window }, active_{ true } {
     // меняем размер окна при переключении с начального
     window_->setSize({static_cast<unsigned int>(field_.rows()) * CELL_SIZE, static_cast<unsigned int>(field_.cols()) * CELL_SIZE + CELL_SIZE});
     FloatRect visibleArea({0.f, 0.f}, {static_cast<float>(field_.rows() * CELL_SIZE), static_cast<float>(field_.cols() * CELL_SIZE + CELL_SIZE)});
@@ -25,7 +25,7 @@ GameWindow::GameWindow(RenderWindow* window)
 void GameWindow::run() {
     // начинаем новую игру
     field_.restart();
-    while (window_->isOpen()) {
+    while (active_) {
         eventHandler();
         render();
     }
