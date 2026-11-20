@@ -1,10 +1,12 @@
 #ifndef MINESWEEPER_GAMEWINDOW_H
 #define MINESWEEPER_GAMEWINDOW_H
 
+#include <SFML/Graphics/Texture.hpp>
+#include <SFML/System/Clock.hpp>
 #include "../game/Field.h"
 #include "../game/Difficulty.h"
 #include "ResetWindow.h"
-#include <SFML/Graphics.hpp>
+#include "ResetButton.h"
 
 namespace sf {
     class RenderWindow;
@@ -22,13 +24,13 @@ private:
     void drawResetButton();
     void render();
 
-    Difficulty difficulty_{ Difficulties::Beginner };
+    Difficulty difficulty_{ Difficulties::Intermediate };
     Field field_{ 0, 0, 0 };
     sf::RenderWindow* window_{};
     sf::Clock clock_{};
     ResetWindow rWindow_;
     sf::Texture cellTexture_{};
-    sf::Texture resetTexture_{};
+    ResetButton rButton_;
     int seconds_{ 0 };
     bool resetWindowOpen_{ false };
     bool active_{ false };

@@ -1,6 +1,7 @@
 #include "Field.h"
 #include <random>
 #include "Cell.h"
+#include "SFML/Window/Keyboard.hpp"
 
 Field::Field(int rows, int cols, int mines)
     : rows_ { rows }, cols_ { cols }, mines_{ mines } {
@@ -8,61 +9,103 @@ Field::Field(int rows, int cols, int mines)
 }
 
 void Field::reset(int rows, int cols, int mines) {
-
+    // to do
 }
 
-// size_t надо будет поменять везде
 void Field::restart() {
-    // Сбрасываем время
-    // timeView = timeReal = 0;
-
-    state_ = playing;
-
+    state_ = ready;
     // Сбрасываем все клетки
     for (int x { 0 }; x < rows_; ++x) {
         for (int y { 0 }; y < cols_; ++y) {
             cell(x, y).reset();
         }
     }
+}
 
-    // Расставляем мины
-    for (int x { 0 }; x < rows_; ++x) {
-        for (int y { 0 }; y < cols_; ++y) {
-            std::random_device rd1{};
-            std::mt19937 gen {rd1()};
-            // ???
-            if (gen() % 5 == 0) {
-                // Текстура мины под номером 9 на картинке
-                cell(x, y).setMine();
-            }
-        }
+void Field::reveal(int row, int col) {
+    Cell& c{ cell(row, col) };
+    if (c.flagged()) {
+        return;
     }
+    if (c.open()) {
+        chord(row, col);
+    }
+    if (state_ == ready) {
+        placeMines(row, col);
+        state_ = playing;
+    }
+    if (c.mine()) {
+        lose();
+    } else {
+        cascadeReveal(row, col);
+        // to do
+        isWin();
+    }
+}
 
-    for (int x { 0 }; x < rows_; ++x) {
-        for (int y { 0 }; y < cols_; ++y) {
-            if (at(x, y).mine()) {
-                continue;
-            }
-            for (int i { x - 1 }; i <= x + 1; ++i) {
-                for (int j { y - 1 }; j <= y + 1; ++j) {
-                    if (i >= 0 && j >= 0 && i < rows_ && j < cols_ && at(x, y).mine()) {
-                        cell(x, y).minesAround_++;
-                    }
-                }
+void Field::flag(int row, int col) {
+    Cell& c{ cell(row, col) };
+    if (c.open()) {
+        return;
+    }
+    if (!c.flagged()) {
+        c.setFlagged(true);
+    } else {
+        c.setFlagged(false);
+    }
+}
+
+void Field::cascadeReveal(int row, int col) {
+    std::vector<std::pair<int, int>> order{ { row, col } };
+    while (!order.empty()) {
+        std::pair p{ order.back() };
+        order.pop_back();
+        Cell& c{ cell(p.first, p.second) };
+        if (c.open() || c.flagged()) {
+            continue;
+        }
+        c.setOpen();
+        // ++marked_; to do
+
+        // если вокруг нет мин, добавляем в очередь соседние клетки
+        if (c.minesAround() == 0) {
+            for (const auto neighbour : getNeighbours(p.first, p.second)) {
+                order.push_back(neighbour);
             }
         }
     }
 }
 
-void Field::open(int row, int col) {
-    Cell& c{ cell(row, col) };
-    if (c.open() || c.flagged()) {
+// срабатывает при нажатии правой кнопкой мыши на уже открытую клетку, если рядом с ней стоит столько же флажков, сколько указано в самой клетке
+void Field::chord(int row, int col) {
+    if (state_ != playing) {
         return;
     }
-    if (c.mine()) {
-        lose();
-    } else {
-        c.setOpen();
+    const Cell& c{ at(row, col) };
+    if (!c.open() || c.minesAround() == 0) {
+        return;
+    }
+    int flags{ 0 };
+    for (const auto n : getNeighbours(row, col)) {
+        if (at(n.first, n.second).flagged()) {
+            ++flags;
+        }
+    }
+    if (flags != c.minesAround()) {
+        return;
+    }
+
+    for (const auto n : getNeighbours(row, col)) {
+        const Cell& nC{ at(n.first, n.second) };
+        if (!nC.open() && !nC.flagged() && nC.mine()) {
+            // to do
+            lose();
+            return;
+        }
+        if (!nC.open() && !nC.flagged()) {
+            cascadeReveal(n.first, n.second);
+            isWin();
+        }
     }
 }
 
@@ -79,16 +122,35 @@ Cell& Field::cell(int row, int col) {
     return cells_[row * cols_ + col];
 }
 
-void Field::placeMines() {
-    // Расставляем мины
-    for (size_t x { 0 }; x < rows_; ++x) {
-        for (size_t y { 0 }; y < cols_; ++y) {
-            std::random_device rd1{};
-            std::mt19937 gen { rd1()} ;
-            // ???
-            if (gen() % 5 == 0) {
-                cell(x, y).setMine();
+// Расставляем мины
+void Field::placeMines(int row, int col) {
+    int placed{ 0 };
+    std::random_device rd{};
+    std::mt19937 gen{ rd() };
+    std::uniform_int_distribution distX(0, rows_ - 1);
+    std::uniform_int_distribution distY(0, cols_ - 1);
+    while (placed < mines_) {
+        int x{ distX(gen) };
+        int y{ distY(gen) };
+        // делаем безопасную зону
+        if (row - 1 <= x && x <= row + 1 && col - 1 <= y && y <= col + 1) {
+            continue;
+        }
+        cell(x, y).setMine();
+        ++placed;
+    }
+    for (int x { 0 }; x < rows_; ++x) {
+        for (int y { 0 }; y < cols_; ++y) {
+            if (at(x, y).mine()) {
+                continue;
             }
+            int count{ 0 };
+            for (const auto neighbour : getNeighbours(x, y)) {
+                if (cell(neighbour.first, neighbour.second).mine()) {
+                    ++count;
+                }
+            }
+            cell(x, y).minesAround_ = count;
         }
     }
 }
@@ -115,4 +177,19 @@ void Field::lose() {
             }
         }
     }
+}
+
+std::vector<std::pair<int, int>> Field::getNeighbours(int row, int col) {
+    std::vector<std::pair<int, int>> v{};
+    for (int r{ row - 1 }; r <= row + 1; ++r) {
+        for (int c{ col - 1 }; c <= col + 1; ++c) {
+            if (r == row && c == col) {
+                continue;
+            }
+            if (0 <= r && r < rows_ && 0 <= c && c < cols_) {
+                v.emplace_back( r, c );
+            }
+        }
+    }
+    return v;
 }

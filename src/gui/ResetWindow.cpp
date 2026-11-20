@@ -58,11 +58,11 @@ void ResetWindow::drawText() {
 }
 
 bool ResetWindow::inYesButton(int x, int y) const {
-    float xY{ yesText_.getPosition().x };
+    float xX{ yesText_.getPosition().x };
     float yY{ yesText_.getPosition().y };
     float width{ yesText_.getLocalBounds().size.x };
     float height{ yesText_.getLocalBounds().size.y };
-    return xY <= x && x <= xY + width && yY <= y && y <= yY + height;
+    return xX <= x && x <= xX + width && yY <= y && y <= yY + height;
 }
 
 bool ResetWindow::inNoButton(int x, int y) const {

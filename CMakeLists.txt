@@ -19,7 +19,8 @@ add_executable(main src/main.cpp
         src/gui/GameWindow.cpp
         src/gui/AppearanceWindow.cpp
         src/gui/ResetWindow.cpp
-        src/gui/SettingsWindow.cpp)
+        src/gui/SettingsWindow.cpp
+        src/gui/ResetButton.cpp)
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics)
 

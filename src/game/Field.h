@@ -7,6 +7,7 @@
 class Field {
 public:
     enum State {
+        ready,
         won,
         lost,
         playing,
@@ -17,7 +18,8 @@ public:
     void reset(int rows, int cols, int mines);
     // restart для начала новой игры при той же сложности
     void restart();
-    void open(int row, int col);
+    void reveal(int row, int col);
+    void flag(int row, int col);
     State state() const;
 
     int rows() const;
@@ -26,16 +28,19 @@ public:
 
 private:
     Cell& cell(int row, int col);
-    void placeMines();
+    void placeMines(int row, int col);
     void isWin();
     void lose();
+    std::vector<std::pair<int, int>> getNeighbours(int row, int col);
+    void cascadeReveal(int row, int col);
+    void chord(int row, int col);
 
     std::vector<Cell> cells_{};
     int rows_{ 0 };
     int cols_{ 0 };
     int mines_{ 0 };
     int marked_{ 0 }; // to do
-    State state_{ playing };
+    State state_{ ready };
 
     friend class GameWindow;
 };
